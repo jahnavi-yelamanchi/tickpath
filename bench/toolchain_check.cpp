@@ -1,7 +1,7 @@
+#include <cstdint>
+
 #include <benchmark/benchmark.h>
 #include <hdr/hdr_histogram.h>
-
-#include <cstdint>
 
 namespace {
 
