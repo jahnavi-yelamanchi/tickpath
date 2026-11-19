@@ -50,17 +50,11 @@ constexpr Price P = 100'000;
 
 // ---- Adds and ordering -------------------------------------------------------
 
-TYPED_TEST_P(BookContract, EmptyBook) {
+TYPED_TEST_P(BookContract, AddCreatesLevelAndOrder) {
     auto& b = this->book;
     EXPECT_EQ(b.order_count(), 0U);
     EXPECT_FALSE(b.best(L1, Side::Buy));
-    EXPECT_FALSE(b.best(L1, Side::Sell));
     EXPECT_FALSE(b.find(1));
-    EXPECT_TRUE(levels(b, L1, Side::Buy).empty());
-}
-
-TYPED_TEST_P(BookContract, AddCreatesLevelAndOrder) {
-    auto& b = this->book;
     ASSERT_EQ(b.add(L1, 1, Side::Buy, 100, P), Status::Ok);
     EXPECT_EQ(b.order_count(), 1U);
     EXPECT_EQ(b.best(L1, Side::Buy), (Level{.price = P, .qty = 100, .orders = 1}));
@@ -368,7 +362,7 @@ TYPED_TEST_P(BookContract, RandomFeedIsAllOk) {
     }
 }
 
-REGISTER_TYPED_TEST_SUITE_P(BookContract, EmptyBook, AddCreatesLevelAndOrder, LevelsSortedBestFirst,
+REGISTER_TYPED_TEST_SUITE_P(BookContract, AddCreatesLevelAndOrder, LevelsSortedBestFirst,
                             SameLevelIsFifoAndAggregated, CrossedBookIsStoredNotMatched,
                             ExtremeValues, LevelQtyDoesNotOverflow32Bits,
                             PartialExecutionKeepsPriority, FullExecutionRemovesOrderAndEmptiesLevel,

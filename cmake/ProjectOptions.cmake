@@ -4,8 +4,13 @@
 set(TICKPATH_WARNINGS
   -Wall -Wextra -Wpedantic -Werror
   -Wconversion -Wsign-conversion -Wshadow -Wold-style-cast
-  -Wnon-virtual-dtor -Woverloaded-virtual -Wnull-dereference
+  -Wnon-virtual-dtor -Woverloaded-virtual
   -Wdouble-promotion -Wfloat-equal -Wimplicit-fallthrough)
+# GCC's -Wnull-dereference fires inside libstdc++ <variant> at -O3 (false
+# positive); keep it for clang only.
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  list(APPEND TICKPATH_WARNINGS -Wnull-dereference)
+endif()
 
 set(TICKPATH_SANITIZER_FLAGS "")
 if(TICKPATH_SANITIZE)

@@ -10,3 +10,5 @@ function(tickpath_add_fuzzer name source)
   target_link_options(${name} PRIVATE -fsanitize=fuzzer)
   tickpath_target_defaults(${name})
 endfunction()
+
+tickpath_add_fuzzer(fuzz_parser fuzz_parser.cpp)
