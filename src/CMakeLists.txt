@@ -4,7 +4,8 @@ add_library(tickpath_core STATIC
   build_info.cpp
   itch/encode.cpp
   sim/generator.cpp
-  sim/fault_injector.cpp)
+  sim/fault_injector.cpp
+  book/reference_book.cpp)
 target_include_directories(tickpath_core PUBLIC
   ${PROJECT_SOURCE_DIR}/include
   ${CMAKE_CURRENT_BINARY_DIR}/generated)
