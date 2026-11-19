@@ -1,0 +1,15 @@
+/build/
+/out/
+/data/*
+!/data/.gitkeep
+/fuzz/corpus-run/
+/site/
+*.itch
+*.itch.gz
+*.gz
+__pycache__/
+.cache/
+compile_commands.json
+perf.data*
+*.svg
+!docs/**/*.svg
