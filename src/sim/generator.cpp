@@ -449,7 +449,8 @@ std::vector<AnyMessage> generate_edge_cases() {
                                               .level2 = 370'000'000'000ULL,
                                               .level3 = 320'000'000'000ULL});
     s.out.emplace_back(itch::MwcbStatus{.header = s.h(0), .breached_level = '1'});
-    s.out.emplace_back(itch::IpoQuotingPeriodUpdate{.header = s.h(loc_b),
+    // Spec 1.2.6: Stock Locate is always 0 for this message.
+    s.out.emplace_back(itch::IpoQuotingPeriodUpdate{.header = s.h(0),
                                                     .stock = symbol_for(loc_b),
                                                     .ipo_quotation_release_time = 36'000,
                                                     .ipo_quotation_release_qualifier = 'A',
@@ -496,7 +497,7 @@ std::vector<AnyMessage> generate_edge_cases() {
 
     // Extreme prices on one symbol: $0.0001 and $200,000.0000.
     s.add(loc_b, 9, Side::Buy, 100, 1);
-    s.add(loc_b, 10, Side::Sell, 100, 2'000'000'000);
+    s.add(loc_b, 10, Side::Sell, 100, itch::max_price4);
     s.exec(loc_b, 9, 100);
 
     // Highest locate, order refs 0 and 2^64-1.
