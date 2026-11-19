@@ -80,3 +80,59 @@ jobs:
           path: build/${{ matrix.preset }}/owner-${{ matrix.preset }}.xml
           if-no-files-found: ignore
 
+  determinism:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        run: sudo apt-get update && sudo apt-get install -y ninja-build clang-${LLVM}
+      - name: Build generator with clang and GCC
+        run: |
+          cmake -S . -B build/clang -G Ninja -DCMAKE_CXX_COMPILER=clang++-${LLVM} -DCMAKE_C_COMPILER=clang-${LLVM} \
+            -DCMAKE_BUILD_TYPE=Release -DTICKPATH_BUILD_TESTS=OFF -DTICKPATH_BUILD_BENCH=OFF
+          cmake -S . -B build/gcc -G Ninja -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc \
+            -DCMAKE_BUILD_TYPE=Release -DTICKPATH_BUILD_TESTS=OFF -DTICKPATH_BUILD_BENCH=OFF
+          cmake --build build/clang --target tickpath-gen
+          cmake --build build/gcc --target tickpath-gen
+      - name: Same seed, same bytes, across runs and compilers
+        run: |
+          for c in clang gcc; do
+            for run in 1 2; do
+              build/$c/tools/tickpath-gen --scenario random --seed 7 --messages 200000 --symbols 32 \
+                --out /tmp/$c-$run.itch | tee /tmp/$c-$run.txt
+            done
+          done
+          sort -u /tmp/*.txt > /tmp/unique.txt
+          cat /tmp/unique.txt
+          test "$(wc -l < /tmp/unique.txt)" -eq 1
+
+  fuzz:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build clang-${LLVM} libclang-rt-${LLVM}-dev
+          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-${LLVM} 100
+          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-${LLVM} 100
+          sudo sysctl vm.mmap_rnd_bits=28
+      - name: Build
+        run: cmake --preset fuzz && cmake --build --preset fuzz
+      - name: Seed corpus
+        run: |
+          mkdir -p corpus
+          build/fuzz/tools/tickpath-gen --scenario edge --out corpus/edge.itch
+          build/fuzz/tools/tickpath-gen --scenario violations --out corpus/violations.itch
+          build/fuzz/tools/tickpath-gen --scenario random --messages 200 --symbols 2 --out corpus/random.itch
+      - name: Fuzz parser (60 s)
+        run: build/fuzz/fuzz/fuzz_parser -max_total_time=60 -max_len=4096 -print_final_stats=1 corpus
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: fuzz-crashes
+          path: |
+            crash-*
+            oom-*
+            timeout-*
+          if-no-files-found: ignore
