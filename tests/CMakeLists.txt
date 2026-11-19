@@ -15,3 +15,4 @@ function(tickpath_add_test name)
 endfunction()
 
 tickpath_add_test(test_build LABELS infra SOURCES unit/test_build.cpp)
+tickpath_add_test(test_messages LABELS infra SOURCES unit/test_messages.cpp)
