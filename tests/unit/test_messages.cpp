@@ -65,6 +65,10 @@ TEST(MessageTable, UnknownTypesHaveZeroLength) {
     }
 }
 
+TEST(MessageTable, MaxPriceFromSpec) {
+    EXPECT_EQ(itch::max_price4, 0x77359400U); // spec: 200,000.0000, 77359400 hex
+}
+
 TEST(Encoder, AddOrderGoldenBytes) {
     const itch::AddOrder m{.header = golden_header,
                            .order_reference_number = 0x1122334455667788ULL,

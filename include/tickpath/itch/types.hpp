@@ -23,6 +23,11 @@ using Mpid = std::array<char, 4>;  ///< Alpha(4), space-padded.
 
 inline constexpr Timestamp max_timestamp = (Timestamp{1} << 48U) - 1U;
 
+/// Largest Price(4) Nasdaq sends: 200,000.0000 (spec, Data Types). The wire
+/// field can hold up to 2^32-1; values above this only arrive from corrupt
+/// input, which the book contract still requires to be handled.
+inline constexpr Price4 max_price4 = 2'000'000'000;
+
 enum class Side : char {
     Buy = 'B',
     Sell = 'S',

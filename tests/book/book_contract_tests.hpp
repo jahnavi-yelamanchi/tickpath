@@ -112,7 +112,7 @@ TYPED_TEST_P(BookContract, ExtremeValues) {
     ASSERT_EQ(b.add(max_l, max_id, Side::Sell, std::numeric_limits<Qty>::max(), max_p), Status::Ok);
     ASSERT_EQ(b.add(max_l, 5, Side::Buy, 1, 0), Status::Ok);
     ASSERT_EQ(b.add(L1, 6, Side::Buy, 1, 1), Status::Ok);
-    ASSERT_EQ(b.add(L1, 7, Side::Buy, 1, 2'000'000'000), Status::Ok);
+    ASSERT_EQ(b.add(L1, 7, Side::Buy, 1, itch::max_price4), Status::Ok);
     EXPECT_EQ(b.best(0, Side::Buy), (Level{.price = 1, .qty = 1, .orders = 1}));
     EXPECT_EQ(b.best(max_l, Side::Sell),
               (Level{.price = max_p, .qty = std::numeric_limits<Qty>::max(), .orders = 1}));
@@ -309,7 +309,7 @@ TYPED_TEST_P(BookContract, EdgeFeedFinalState) {
     EXPECT_EQ(ids_at(b, L1, Side::Sell, P + 100), (std::vector<OrderId>{7}));
     EXPECT_EQ(ids_at(b, L1, Side::Sell, P + 300), (std::vector<OrderId>{8}));
     EXPECT_FALSE(b.best(L2, Side::Buy));
-    EXPECT_EQ(b.best(L2, Side::Sell), (Level{.price = 2'000'000'000, .qty = 100, .orders = 1}));
+    EXPECT_EQ(b.best(L2, Side::Sell), (Level{.price = itch::max_price4, .qty = 100, .orders = 1}));
     EXPECT_FALSE(b.best(65'535, Side::Buy));
     EXPECT_EQ(b.order_count(), 5U);
 }

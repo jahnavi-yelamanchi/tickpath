@@ -235,7 +235,7 @@ TEST(Generator, EdgeCasesContainExtremes) {
     for (const auto& m : msgs) {
         if (const auto* a = std::get_if<itch::AddOrder>(&m)) {
             min_px |= a->price == 1;
-            max_px |= a->price == 2'000'000'000;
+            max_px |= a->price == itch::max_price4;
             max_locate |= a->header.stock_locate == 65'535;
             max_ref |= a->order_reference_number == std::numeric_limits<itch::OrderRef>::max();
         }
