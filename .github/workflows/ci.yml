@@ -1,0 +1,82 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  LLVM: 18
+
+jobs:
+  format:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install clang-format
+        run: sudo apt-get update && sudo apt-get install -y clang-format-${LLVM}
+      - name: clang-format check
+        run: |
+          files=$(git ls-files '*.cpp' '*.hpp')
+          clang-format-${LLVM} --dry-run --Werror $files
+
+  build-test:
+    name: ${{ matrix.preset }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        preset: [debug, release, release-gcc, asan-ubsan, tsan]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build clang-${LLVM} clang-tidy-${LLVM} libclang-rt-${LLVM}-dev
+          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-${LLVM} 100
+          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-${LLVM} 100
+          sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-${LLVM} 100
+      - name: Sanitizer address-space fix
+        if: contains(matrix.preset, 'san')
+        # Runner kernels use 32 random mmap bits; TSan/ASan in LLVM 18 need <= 28.
+        run: sudo sysctl vm.mmap_rnd_bits=28
+      - uses: actions/cache@v4
+        with:
+          path: build/${{ matrix.preset }}/_deps
+          key: deps-${{ matrix.preset }}-${{ hashFiles('cmake/Dependencies.cmake') }}
+      - name: Configure
+        run: cmake --preset ${{ matrix.preset }}
+      - name: Build
+        run: cmake --build --preset ${{ matrix.preset }}
+      - name: Infrastructure tests (gate)
+        run: ctest --preset ${{ matrix.preset }} -L infra
+      - name: Owner tests (report only)
+        if: always()
+        run: |
+          set +e
+          ctest --preset ${{ matrix.preset }} -L owner --output-junit owner-${{ matrix.preset }}.xml > owner.log 2>&1
+          total=$(grep -oE 'out of [0-9]+' owner.log | grep -oE '[0-9]+' | tail -1)
+          failed=$(grep -oE '[0-9]+ tests failed' owner.log | grep -oE '^[0-9]+' | tail -1)
+          passed=$(( ${total:-0} - ${failed:-0} ))
+          {
+            echo "### Owner tests (${{ matrix.preset }})"
+            echo ""
+            echo "${passed}/${total:-0} passing. These test the hand-written parser, books and risk check;"
+            echo "they fail until those are implemented and do not gate CI (docs/ADR-004.md)."
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit 0
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: owner-tests-${{ matrix.preset }}
+          path: build/${{ matrix.preset }}/owner-${{ matrix.preset }}.xml
+          if-no-files-found: ignore
+
