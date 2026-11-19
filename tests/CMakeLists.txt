@@ -18,3 +18,11 @@ tickpath_add_test(test_build LABELS infra SOURCES unit/test_build.cpp)
 tickpath_add_test(test_messages LABELS infra SOURCES unit/test_messages.cpp)
 tickpath_add_test(test_generator LABELS infra SOURCES unit/test_generator.cpp)
 tickpath_add_test(test_reference_book LABELS infra SOURCES book/test_reference_book.cpp)
+
+
+# Infrastructure: must pass.
+tickpath_add_test(test_differential_harness LABELS infra SOURCES differential/test_differential_harness.cpp)
+
+# Owner-written hot path: fail until implemented.
+tickpath_add_test(test_fast_books LABELS owner SOURCES book/test_fast_books.cpp)
+tickpath_add_test(test_differential_fast_books LABELS owner SOURCES differential/test_differential_fast_books.cpp)

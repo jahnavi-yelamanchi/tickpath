@@ -67,13 +67,13 @@ public:
     }
 
     [[nodiscard]] std::optional<Level> best(Locate l, Side s) const noexcept {
-        std::optional<Level> out;
-        for_each_level(l, s, [&out](const Level& lv) noexcept {
-            if (!out) {
-                out = lv;
-            }
-        });
-        return out;
+        const auto* side = levels(l, s);
+        if (side == nullptr) {
+            return std::nullopt;
+        }
+        // Bids: highest price is the last key; asks: lowest is the first.
+        const auto& entry = s == Side::Buy ? *side->rbegin() : *side->begin();
+        return aggregate(entry.first, entry.second);
     }
 
     [[nodiscard]] std::optional<Order> find(OrderId id) const noexcept {
@@ -92,14 +92,7 @@ public:
         if (side == nullptr) {
             return;
         }
-        const auto visit = [&](const auto& entry) {
-            Level lv{.price = entry.first, .qty = 0, .orders = 0};
-            for (const OrderId id : entry.second) {
-                lv.qty += orders_.at(id).qty;
-                ++lv.orders;
-            }
-            fn(lv);
-        };
+        const auto visit = [&](const auto& entry) { fn(aggregate(entry.first, entry.second)); };
         if (s == Side::Buy) {
             std::for_each(side->rbegin(), side->rend(), visit);
         } else {
@@ -126,6 +119,15 @@ private:
     using Queue = std::vector<OrderId>;        // FIFO, front = oldest
     using SideLevels = std::map<Price, Queue>; // ascending price
     using Key = std::pair<Locate, Side>;
+
+    [[nodiscard]] Level aggregate(Price p, const Queue& q) const {
+        Level lv{.price = p, .qty = 0, .orders = 0};
+        for (const OrderId id : q) {
+            lv.qty += orders_.at(id).qty;
+            ++lv.orders;
+        }
+        return lv;
+    }
 
     Status reduce(Locate l, OrderId id, Qty q) noexcept {
         const auto it = orders_.find(id);
