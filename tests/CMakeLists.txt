@@ -22,7 +22,11 @@ tickpath_add_test(test_reference_book LABELS infra SOURCES book/test_reference_b
 
 # Infrastructure: must pass.
 tickpath_add_test(test_differential_harness LABELS infra SOURCES differential/test_differential_harness.cpp)
+tickpath_add_test(test_oracle_properties LABELS infra SOURCES property/test_oracle_properties.cpp)
 
 # Owner-written hot path: fail until implemented.
+tickpath_add_test(test_parser LABELS owner SOURCES itch/test_parser.cpp)
 tickpath_add_test(test_fast_books LABELS owner SOURCES book/test_fast_books.cpp)
 tickpath_add_test(test_differential_fast_books LABELS owner SOURCES differential/test_differential_fast_books.cpp)
+tickpath_add_test(test_book_properties LABELS owner SOURCES property/test_book_properties.cpp)
+tickpath_add_test(test_risk LABELS owner SOURCES risk/test_risk.cpp)
