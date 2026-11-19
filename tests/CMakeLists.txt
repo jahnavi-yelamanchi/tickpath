@@ -16,3 +16,4 @@ endfunction()
 
 tickpath_add_test(test_build LABELS infra SOURCES unit/test_build.cpp)
 tickpath_add_test(test_messages LABELS infra SOURCES unit/test_messages.cpp)
+tickpath_add_test(test_generator LABELS infra SOURCES unit/test_generator.cpp)
