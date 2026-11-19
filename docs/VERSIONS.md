@@ -22,11 +22,24 @@ checks the length table and golden bytes.
 
 ### Verification status
 
-- Not yet checked against the PDF. The PDF host was blocked in the session that wrote the
-  definitions, so the layouts were transcribed from the 5.0 field tables without the
-  document open. Revision date of the PDF: TODO(owner) record it when checked.
-- Check: open the PDF, compare every row of `messages.hpp` (offset, length, type), then
-  replace this section with "Verified against revision <date> on <date>".
+Verified against the official PDF, revision log entry **April 28, 2023** (latest), on
+2026-11-19. All 23 message tables match `messages.hpp`: type character, every field offset,
+length and type, and total length. Byte order (big-endian), alpha padding (left-justified,
+space-padded) and timestamp unit (ns since midnight) match the Data Types section.
+
+Spec notes that affect this project:
+
+| Item | Spec | Effect here |
+|---|---|---|
+| Price(4) maximum | 200,000.0000 = 2,000,000,000 (0x77359400) | `itch::max_price4`; the edge feed uses it. The book contract still requires correct handling up to 2^32-1 (corrupt input). |
+| `K` IPO Quoting Period Update | Stock Locate always 0 | generator fixed to send 0 |
+| `S`, `V`, `W` | Stock Locate always 0 | generator already sends 0 |
+| `P` Trade (non-cross) | Order Reference Number is 0 since 2010-12-06; Buy/Sell is always `B` since 2014-07-14 | parser still validates `B`/`S`; books ignore `P` |
+| `N` RPII | RPI program ceased 2014-12-31 (section shown greyed out) | message kept; real days may contain none |
+| `I` NOII | Imbalance Direction `P` (Paused) added 2023-04-28; Cross Type `A` (Extended Trading Close) added 2022-01-07 | value changes only, no layout change |
+| `O` DLCR | added 2023-04-28 | included |
+| `h` Operational Halt | added 2018-03-03 | included |
+| Transport | SoupBinTCP, compressed SoupBinTCP, MoldUDP64 | the PDF does not describe the sample-file framing; see below |
 
 ## Sample-file framing
 
